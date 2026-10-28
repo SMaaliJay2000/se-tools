@@ -1,8 +1,8 @@
 import { CircleAlert, CircleCheck, Cookie, EyeOff, FileCode2, Info, Lock, Network, OctagonAlert, TriangleAlert, type LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import type { Category, Severity } from "@/types";
-import { SEVERITY_LABEL } from "@/types";
+import type { Category, Severity } from "../types";
+import { SEVERITY_LABEL } from "../types";
 
 // Full class strings so Tailwind can see them at build time.
 export const SEV_TONE: Record<Severity, string> = {

@@ -1,30 +1,22 @@
-# Header Check
+# SE Tools
 
-CORS and security header analyzer. React + Vite + TypeScript frontend, Express API, deploys to Vercel as-is.
+Utilities for software engineers, in one React + Vite + TypeScript app with an Express API. Deploys to Vercel as-is. Each tool is a self-contained folder on both sides of the wire, so adding another one is a local change.
 
-## What it checks
-
-| Area | Checks |
-| --- | --- |
-| HTTPS | Plain HTTP, HTTPS to HTTP redirect downgrade, invalid/expired/expiring certificate, TLS 1.0/1.1 |
-| Headers | CSP (missing, report-only, `unsafe-inline`, `unsafe-eval`, wildcards, `object-src`, `base-uri`), HSTS, X-Frame-Options / `frame-ancestors`, `nosniff`, Referrer-Policy, Permissions-Policy, COOP/CORP/COEP, legacy X-XSS-Protection |
-| Cookies | `Secure`, `HttpOnly`, `SameSite`, `SameSite=None`, `__Host-` prefix rules. Session-like names are rated higher |
-| CORS | Reflected arbitrary origin, reflection with credentials, `*` (with and without credentials), `null` origin, prefix/suffix origin bypass, missing `Vary: Origin`, private network access, permissive preflight headers |
-| Disclosure | `Server` version, `X-Powered-By`, `X-AspNet-Version` |
-
-Every finding has a copy-paste fix for **Express, ASP.NET Core, nginx and IIS**. Enter your frontend origin to see whether the target allows it, and which methods, headers and max-age it returns.
-
-Extras: A+ to F grade, redirect chain, raw response headers, CORS probe table, JSON export, scan history (browser localStorage only), and a staging vs production **Compare** view.
+| Tool | Route | What it does |
+| --- | --- | --- |
+| **Header Check** | `/header-check` | Scans a URL for missing security headers, risky cookies and CORS misconfigurations, with fixes for Express, ASP.NET Core, nginx and IIS |
+| **Hash Playground** | `/hash-playground` | SHA-2, HMAC, bcrypt, Argon2id, PBKDF2 and AES-GCM with live parameters, hash verification, salt/IV visualisation, cost-factor benchmarks, a tuning guide, and equivalent code for C#, Node.js, Python, Java, Go and PHP |
 
 ## Run locally
 
 ```bash
 npm install
-npm run dev        # API on :3001, Vite on :5173 (proxies /api)
-npm test           # SSRF guard + analyzer tests
+npm run dev        # API on :3001, Vite on :3000 (proxies /api)
+npm test           # all server-side suites
+npm run build      # type-check + production build
 ```
 
-To scan servers on your own machine (for example `http://localhost:5000`), start the API with the guard relaxed. **Development only:**
+To scan servers on your own machine (for example `http://localhost:5000`) with Header Check, start the API with the SSRF guard relaxed. **Development only:**
 
 ```bash
 ALLOW_PRIVATE_TARGETS=true npm run dev
@@ -38,24 +30,56 @@ vercel          # preview
 vercel --prod
 ```
 
-No environment variables are needed. `vercel.json` rewrites `/api/*` to the Express app in `api/index.js` and sets strict security headers on the frontend itself (so the tool scores well on itself). Never set `ALLOW_PRIVATE_TARGETS` in production.
+No environment variables are needed. `vercel.json` rewrites `/api/*` to the Express app in `api/index.js`, serves `index.html` for every other path (client-side routes), and sets strict security headers on the frontend itself (so Header Check scores well on itself). Never set `ALLOW_PRIVATE_TARGETS` in production.
 
 ## Layout
 
 ```
-api/index.js              Vercel entry, exports the Express app
-server/app.js             routes + per-IP rate limit
-server/dev.js             local listener
-server/lib/ssrf.js        URL validation, IP blocklist, pinned DNS lookup, redirect re-validation
-server/lib/analyze.js     orchestration, transport checks
-server/lib/checks/*.js    headers, cookies, CORS
-server/lib/fixes.js       fix snippets per stack
-server/lib/score.js       penalties and grades
-src/                      React UI
-test/                     node:test suites
+api/index.js                    Vercel entry, exports the Express app
+server/
+  app.js                        mounts every tool at /api/<id>, JSON error handler
+  dev.js                        local listener
+  shared/rate-limit.js          per-IP limiter and concurrency cap, reused by tools
+  tools/
+    index.js                    server-side tool registry
+    header-check/               routes.js + lib/ (ssrf, analyze, checks/, fixes, score)
+    hash-playground/            routes.js + lib/ (passwords/, digest, aes-gcm, benchmark, tuning, validation)
+src/
+  main.tsx, App.tsx             shell: header, tool navigation, home, routing
+  lib/router.tsx                tiny History API router
+  components/                   shared UI: shadcn primitives in ui/, CodeBlock, CopyButton, PageIntro
+  tools/
+    registry.ts                 client-side tool registry (lazy-loaded pages)
+    header-check/               HeaderCheckTool.tsx, api.ts, types.ts, history.ts, components/, lib/
+    hash-playground/            HashPlaygroundTool.tsx, api.ts, types.ts, panels/, components/, snippets/, lib/
+test/<tool-id>/                 node:test suites per tool
 ```
 
-## Security notes
+### Adding a tool
+
+1. `server/tools/<id>/routes.js` exports an Express `Router` (install its own `express.json` limit and rate limits); register it in `server/tools/index.js`. It is served at `/api/<id>/...`.
+2. `src/tools/<id>/` holds a default-exported page component; add an entry (id, name, tagline, icon, lazy import) to `src/tools/registry.ts`. It is served at `/<id>/<sub-path>` and appears in the header and on the home page.
+3. Tests go in `test/<id>/*.test.js`.
+
+## Header Check
+
+### What it checks
+
+| Area | Checks |
+| --- | --- |
+| HTTPS | Plain HTTP, HTTPS to HTTP redirect downgrade, invalid/expired/expiring certificate, TLS 1.0/1.1 |
+| Headers | CSP (missing, report-only, `unsafe-inline`, `unsafe-eval`, wildcards, `object-src`, `base-uri`), HSTS, X-Frame-Options / `frame-ancestors`, `nosniff`, Referrer-Policy, Permissions-Policy, COOP/CORP/COEP, legacy X-XSS-Protection |
+| Cookies | `Secure`, `HttpOnly`, `SameSite`, `SameSite=None`, `__Host-` prefix rules. Session-like names are rated higher |
+| CORS | Reflected arbitrary origin, reflection with credentials, `*` (with and without credentials), `null` origin, prefix/suffix origin bypass, missing `Vary: Origin`, private network access, permissive preflight headers |
+| Disclosure | `Server` version, `X-Powered-By`, `X-AspNet-Version` |
+
+Every finding has a copy-paste fix for **Express, ASP.NET Core, nginx and IIS**. Enter your frontend origin to see whether the target allows it, and which methods, headers and max-age it returns.
+
+Extras: A+ to F grade, redirect chain, raw response headers, CORS probe table, JSON export, scan history (browser localStorage only), and a staging vs production **Compare** view.
+
+API: `POST /api/header-check/analyze` with `{ "url": "...", "origin": "..." }`.
+
+### Security notes
 
 This service fetches URLs on behalf of visitors, so it is an SSRF target. Protections:
 
@@ -65,6 +89,44 @@ This service fetches URLs on behalf of visitors, so it is an SSRF target. Protec
 - 8 second timeout, response bodies are never read, request body limit 10 KB.
 - Best-effort in-memory rate limit (20 scans/min/IP). Serverless instances don't share memory, so add Vercel Firewall rate limiting or Upstash for a public deployment.
 
-## Scoring
+### Scoring
 
 Start at 100. Critical -30, high -15, medium -8, low -3, info/pass 0. Any critical finding caps the score at 40. A+ 97+, A 90+, B 80+, C 65+, D 50+, F below.
+
+## Hash Playground
+
+Tabs: SHA-2, HMAC, Password hashing, Verify hash, AES-GCM, Benchmark, Tuning guide. The UI builds its forms from `GET /api/hash-playground/algorithms`, so parameter names, bounds and defaults live only on the server.
+
+| Endpoint (all under `/api/hash-playground`) | Purpose |
+| --- | --- |
+| `GET /algorithms` | Catalog: algorithms, parameters, bounds, defaults |
+| `POST /digest`, `POST /hmac` | SHA-256/384/512 and HMAC over text, hex or base64 input |
+| `POST /password/hash` | `{algorithm, password, parameters?}` returns the encoded hash, salt and hash bytes, timing, warnings |
+| `POST /password/verify` | `{password, encoded}`; the algorithm is detected from the prefix |
+| `POST /aes-gcm/encrypt`, `/decrypt` | Base64 key/IV/ciphertext/tag, optional AAD; `auth_failed` on any modification |
+| `POST /benchmark` | Sweep one parameter and time each value |
+| `POST /tuning/recommend` | `{targetMs, argon2MemoryKb}` returns parameters calibrated to this machine |
+
+Errors are `{ "error": "message", "code": "stable_code" }` with status 400 for user-correctable problems.
+
+Encoded formats are self-describing and interoperable, which the test suite checks against hashes made by Node (bcryptjs) and Python (argon2-cffi):
+
+- bcrypt: `$2a$12$<22-char salt><31-char hash>` (verifies `$2a$`/`$2b$`/`$2y$` from any stack)
+- Argon2id: `$argon2id$v=19$m=19456,t=2,p=1$<salt>$<hash>` (standard PHC string)
+- PBKDF2: `$pbkdf2-sha256$i=600000$<salt>$<hash>` (PHC-style; PBKDF2 has no universal format)
+
+Implementation: Node `crypto` for SHA-2, HMAC, PBKDF2 and AES-GCM; [`hash-wasm`](https://github.com/Daninet/hash-wasm) (WebAssembly, no native build) for bcrypt and Argon2id, so it deploys on Vercel unchanged.
+
+### Safety properties
+
+- **Bounded work.** Every parameter has a maximum (bcrypt cost ≤ 14, Argon2id ≤ 128 MiB / 10 passes / 16 lanes, PBKDF2 ≤ 5 M rounds). The same limits apply to values *parsed out of a pasted hash*, so a crafted string can't demand unbounded CPU or memory.
+- **Throttling.** 120 requests/min per IP, 40/min for hashing endpoints, at most 2 hashing requests in flight per instance. Bodies are capped at 1 MB and benchmarks stop after 15 s (Vercel allows 30 s).
+- **Constant-time comparison** for hash and MAC checks; AES-GCM never releases plaintext on tag failure.
+- Inputs are sent to the server in plain text and never logged or stored. The UI warns not to enter real secrets.
+
+Timings are wall-clock on whatever machine runs the API; run the calibration on production-class hardware before copying numbers. Tuning guidance follows the OWASP Password Storage Cheat Sheet; re-check it against the current revision before adopting values.
+
+### Extending
+
+- **New password algorithm:** add a file to `server/tools/hash-playground/lib/passwords/` exporting `{ id, displayName, description, formatExample, parameters, costParameter, canVerify, hash, verify }` and list it in that folder's `index.js`. The catalog, forms, verify auto-detection and benchmark pick it up; add a snippet template for the code samples.
+- **New language in the code samples:** add it to `STACKS` and the builders in `src/tools/hash-playground/snippets/templates.ts`.

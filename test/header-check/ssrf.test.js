@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { isBlockedIp, validateTarget } from "../server/lib/ssrf.js";
+import { isBlockedIp, validateTarget } from "../../server/tools/header-check/lib/ssrf.js";
 
 delete process.env.ALLOW_PRIVATE_TARGETS;
 

@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Check, ChevronDown, Copy } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import type { Finding, Fix } from "../types";
-import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import CodeBlock from "@/components/CodeBlock";
 import { cn } from "@/lib/utils";
-import { SEV_RAIL, SeverityBadge } from "@/lib/severity";
+import { SEV_RAIL, SeverityBadge } from "../lib/severity";
 
 const STACKS: { key: keyof Fix; label: string }[] = [
   { key: "express", label: "Express" },
@@ -13,28 +13,6 @@ const STACKS: { key: keyof Fix; label: string }[] = [
   { key: "nginx", label: "nginx" },
   { key: "iis", label: "IIS" },
 ];
-
-function CodeBlock({ code }: { code: string }) {
-  const [copied, setCopied] = useState(false);
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      /* clipboard blocked: user can still select the text */
-    }
-  };
-  return (
-    <div className="relative min-w-0">
-      <Button variant="outline" size="xs" className={cn("absolute top-2 right-2", copied && "border-sev-pass text-sev-pass")} onClick={copy}>
-        {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
-        {copied ? "Copied" : "Copy"}
-      </Button>
-      <pre className="m-0 overflow-x-auto rounded-lg border bg-muted/60 p-3.5 pr-20 font-mono text-[0.82rem] leading-relaxed"><code>{code}</code></pre>
-    </div>
-  );
-}
 
 function FixTabs({ fix }: { fix: Fix }) {
   const [stack, setStack] = useState<keyof Fix>(() => {

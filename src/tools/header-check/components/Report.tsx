@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { CAT_ICON } from "@/lib/severity";
+import { CAT_ICON } from "../lib/severity";
 import Grade from "./Grade";
 import FindingRow from "./Finding";
 

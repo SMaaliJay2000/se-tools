@@ -3,7 +3,7 @@ import type { ScanResult } from "./types";
 export async function scan(url: string, origin?: string, signal?: AbortSignal): Promise<ScanResult> {
   let res: Response;
   try {
-    res = await fetch("/api/analyze", {
+    res = await fetch("/api/header-check/analyze", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ url, origin: origin || undefined }),

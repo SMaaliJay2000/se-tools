@@ -3,7 +3,7 @@ import type { Category } from "../types";
 import { CATEGORY_LABEL } from "../types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { CAT_ICON } from "@/lib/severity";
+import { CAT_ICON } from "../lib/severity";
 
 const CHECKS: Record<Category, string[]> = {
   transport: ["Plain HTTP and HTTPS → HTTP redirects", "Invalid, expired or expiring certificates", "TLS 1.0 / 1.1"],

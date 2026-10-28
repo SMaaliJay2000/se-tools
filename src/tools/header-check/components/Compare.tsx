@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { SeverityBadge } from "@/lib/severity";
+import { SeverityBadge } from "../lib/severity";
 import Grade from "./Grade";
 import IconField from "./IconField";
 
