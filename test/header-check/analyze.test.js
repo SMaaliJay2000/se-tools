@@ -2,7 +2,7 @@ import test, { before, after } from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
 import { analyze } from "../../server/tools/header-check/lib/analyze.js";
-import { computeScore } from "../../server/tools/header-check/lib/score.js";
+import { computeScore } from "../../server/shared/score.js";
 
 process.env.ALLOW_PRIVATE_TARGETS = "true"; // fixtures run on 127.0.0.1
 

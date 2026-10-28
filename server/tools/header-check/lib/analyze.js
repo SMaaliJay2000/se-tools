@@ -2,7 +2,7 @@ import { BlockedTargetError, fetchChain, request, validateTarget } from "./ssrf.
 import { checkHeaders } from "./checks/headers.js";
 import { checkCookies } from "./checks/cookies.js";
 import { checkCors } from "./checks/cors.js";
-import { computeScore } from "./score.js";
+import { computeScore } from "../../../shared/score.js";
 import { fixes } from "./fixes.js";
 
 export class ScanError extends Error {

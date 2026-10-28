@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { CAT_ICON } from "../lib/severity";
-import Grade from "./Grade";
+import Grade from "@/components/Grade";
 import FindingRow from "./Finding";
 
 const ORDER = Object.fromEntries(SEVERITIES.map((s, i) => [s, i])) as Record<Severity, number>;

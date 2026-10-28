@@ -1,5 +1,5 @@
 import { lazy, type ComponentType, type LazyExoticComponent } from "react";
-import { Fingerprint, ShieldCheck, type LucideIcon } from "lucide-react";
+import { DatabaseZap, Fingerprint, ShieldCheck, type LucideIcon } from "lucide-react";
 
 /** Props every tool page receives. `subPath` is what follows /<id>/ in the URL, e.g. ["password"] for /hash-playground/password. */
 export interface ToolProps {
@@ -31,5 +31,12 @@ export const tools: Tool[] = [
     tagline: "Experiment with SHA-2, HMAC, bcrypt, Argon2id, PBKDF2 and AES-GCM, benchmark cost factors, and copy equivalent code for six stacks.",
     icon: Fingerprint,
     component: lazy(() => import("./hash-playground/HashPlaygroundTool")),
+  },
+  {
+    id: "sql-check",
+    name: "SQL Check",
+    tagline: "Paste queries to catch syntax errors, a missing WHERE, cross joins and full scans, and get an optimization grade per statement. Add your schema for index-aware advice.",
+    icon: DatabaseZap,
+    component: lazy(() => import("./sql-check/SqlCheckTool")),
   },
 ];

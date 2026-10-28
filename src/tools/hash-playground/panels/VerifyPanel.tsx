@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { api } from "../api";
 import Field from "../components/Field";
 import { ErrorNotice } from "../components/Notices";
-import { useAction } from "../hooks/useAction";
+import { useAction } from "@/hooks/useAction";
 import { formatMs, formatParam } from "../lib/format";
 
 // Hashes produced by other stacks: verifying them here shows the formats are interoperable.

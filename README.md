@@ -6,6 +6,7 @@ Utilities for software engineers, in one React + Vite + TypeScript app with an E
 | --- | --- | --- |
 | **Header Check** | `/header-check` | Scans a URL for missing security headers, risky cookies and CORS misconfigurations, with fixes for Express, ASP.NET Core, nginx and IIS |
 | **Hash Playground** | `/hash-playground` | SHA-2, HMAC, bcrypt, Argon2id, PBKDF2 and AES-GCM with live parameters, hash verification, salt/IV visualisation, cost-factor benchmarks, a tuning guide, and equivalent code for C#, Node.js, Python, Java, Go and PHP |
+| **SQL Check** | `/sql-check` | Static review of SQL for PostgreSQL, MySQL, SQL Server and SQLite: syntax errors, missing WHERE, cross joins, non-sargable filters, full scans and more, graded per statement, with optional schema-aware index advice |
 
 ## Run locally
 
@@ -40,18 +41,23 @@ server/
   app.js                        mounts every tool at /api/<id>, JSON error handler
   dev.js                        local listener
   shared/rate-limit.js          per-IP limiter and concurrency cap, reused by tools
+  shared/score.js               severity penalties, 0-100 score and A+..F grade, reused by tools that report findings
   tools/
     index.js                    server-side tool registry
     header-check/               routes.js + lib/ (ssrf, analyze, checks/, fixes, score)
     hash-playground/            routes.js + lib/ (passwords/, digest, aes-gcm, benchmark, tuning, validation)
+    sql-check/                  routes.js + lib/ (split, parse, ast, schema, score, analyze, rules/)
 src/
   main.tsx, App.tsx             shell: header, tool navigation, home, routing
   lib/router.tsx                tiny History API router
-  components/                   shared UI: shadcn primitives in ui/, CodeBlock, CopyButton, PageIntro
+  components/                   shared UI: shadcn primitives in ui/, CodeBlock, CopyButton, PageIntro, Grade, Segmented
+  hooks/useAction.ts            loading/error/data wrapper for API calls
+  lib/severity.tsx              severity/grade styling and the Score type shared by tools that report findings
   tools/
     registry.ts                 client-side tool registry (lazy-loaded pages)
     header-check/               HeaderCheckTool.tsx, api.ts, types.ts, history.ts, components/, lib/
     hash-playground/            HashPlaygroundTool.tsx, api.ts, types.ts, panels/, components/, snippets/, lib/
+    sql-check/                  SqlCheckTool.tsx, api.ts, types.ts, components/, lib/
 test/<tool-id>/                 node:test suites per tool
 ```
 
@@ -130,3 +136,32 @@ Timings are wall-clock on whatever machine runs the API; run the calibration on 
 
 - **New password algorithm:** add a file to `server/tools/hash-playground/lib/passwords/` exporting `{ id, displayName, description, formatExample, parameters, costParameter, canVerify, hash, verify }` and list it in that folder's `index.js`. The catalog, forms, verify auto-detection and benchmark pick it up; add a snippet template for the code samples.
 - **New language in the code samples:** add it to `STACKS` and the builders in `src/tools/hash-playground/snippets/templates.ts`.
+
+## SQL Check
+
+Paste one or more statements, pick a dialect, and get a grade per statement and overall. It is a **static review**: nothing connects to a database and no execution plan is read, so the grade is a checklist, not a benchmark. Syntax problems are results (a finding with line and column), not request errors, and the other statements in the script are still analysed.
+
+Statements are parsed with [`node-sql-parser`](https://github.com/taozhi8833998/node-sql-parser) (per-dialect grammars for PostgreSQL, MySQL/MariaDB, SQL Server and SQLite) and checked by a table of rules. If the SQL is valid for your database but the parser doesn't support the syntax (for example PostgreSQL's `DELETE ... USING`), you get a syntax finding; a keyword fallback still catches `UPDATE`/`DELETE` without `WHERE` and `SELECT *` in that case.
+
+| Category | Rules |
+| --- | --- |
+| Safety | `UPDATE`/`DELETE` without `WHERE` (critical), always-true `WHERE` such as `1=1` (critical), `DROP`/`TRUNCATE` |
+| Correctness | syntax error (with a hint when the SQL parses under another dialect), join without a condition / Cartesian product, comma joins, `= NULL`, `NOT IN (subquery)`, `INSERT` without a column list or with a column/value count mismatch, non-grouped columns, `HAVING` without an aggregate, `LIMIT`/`TOP` without `ORDER BY`, duplicate aliases, `UNION` vs `UNION ALL`, unqualified columns in multi-table queries |
+| Performance | `SELECT *`, no `WHERE`/limit, function or arithmetic on a column (non-sargable), leading-wildcard `LIKE`, `OR` across columns, very long `IN` lists, deep `OFFSET`, `ORDER BY RAND()/RANDOM()/NEWID()`, correlated subqueries in the select list, many joins, `DISTINCT` over joins |
+| Schema (optional) | unknown tables and columns (with "did you mean"), filters/joins/sorts with no usable index, composite index used without its leading column, `SELECT *` on wide tables |
+
+Paste `CREATE TABLE`, `CREATE INDEX` and `ALTER TABLE ... ADD INDEX` statements into the optional schema box to enable the schema rules. Every finding that isn't a pass carries a "how to fix", with dialect-specific advice where it differs (`TOP` vs `LIMIT`, `NEWID()`, expression indexes).
+
+Scoring uses the shared penalties (critical -30, high -15, medium -8, low -3; any critical caps the score at 40). The overall score is the rounded mean of the statement scores, still capped by any critical; a statement that doesn't parse is capped at 50.
+
+| Endpoint (under `/api/sql-check`) | Purpose |
+| --- | --- |
+| `GET /options` | Dialects and limits (100,000 characters of SQL, 100,000 of schema, 50 statements, 20,000 characters per statement) |
+| `POST /analyze` | `{ sql, dialect, schema? }` returns `{ statements[], findings[], score, schema }`; 400 with a `code` only for bad requests (empty, too long, unknown dialect) |
+
+Queries are processed in memory and never stored or logged; the UI warns not to paste real data or credentials. Limits: 60 requests/min per IP and at most 4 analyses in flight per instance.
+
+### Extending
+
+- **New rule:** add `{ id, category, severity, title, applies?, needsSchema?, pass?, run(ctx) }` to a file in `server/tools/sql-check/lib/rules/` (`run` returns hits `{ detail, fix, snippet?, severity? }`), plus a bad/good SQL pair in `test/sql-check/rules.test.js`. Thresholds live in `rules/thresholds.js`.
+- **AST shapes differ by dialect** (column names, `LIMIT`/`TOP`/`FETCH`, `UNION` via `_next`), so rules read them through the helpers in `lib/ast.js`.

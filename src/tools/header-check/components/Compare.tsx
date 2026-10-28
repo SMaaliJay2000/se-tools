@@ -7,8 +7,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { SeverityBadge } from "../lib/severity";
-import Grade from "./Grade";
+import { SeverityBadge } from "@/lib/severity";
+import Grade from "@/components/Grade";
 import IconField from "./IconField";
 
 const RANK = Object.fromEntries(SEVERITIES.map((s, i) => [s, i])) as Record<Severity, number>;

@@ -8,7 +8,7 @@ import { api } from "../api";
 import Field from "../components/Field";
 import { ErrorNotice } from "../components/Notices";
 import SnippetViewer from "../components/SnippetViewer";
-import { useAction } from "../hooks/useAction";
+import { useAction } from "@/hooks/useAction";
 import { formatMemory, formatMs, formatParam } from "../lib/format";
 import { passwordSpec } from "../snippets/templates";
 import { ARGON2_PROFILES, ARGON2_RULES, BCRYPT_RULES, GENERAL_RULES, PBKDF2_MINIMUMS } from "./tuning-guide";

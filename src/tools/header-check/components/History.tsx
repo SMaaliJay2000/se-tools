@@ -3,7 +3,7 @@ import type { HistoryEntry } from "../history";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { gradeTone } from "../lib/severity";
+import { gradeTone } from "@/lib/severity";
 
 interface Props {
   items: HistoryEntry[];

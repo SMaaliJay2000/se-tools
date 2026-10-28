@@ -5,7 +5,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CodeBlock from "@/components/CodeBlock";
 import { cn } from "@/lib/utils";
-import { SEV_RAIL, SeverityBadge } from "../lib/severity";
+import { SEV_RAIL, SeverityBadge } from "@/lib/severity";
 
 const STACKS: { key: keyof Fix; label: string }[] = [
   { key: "express", label: "Express" },

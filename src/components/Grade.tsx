@@ -1,13 +1,11 @@
-import type { ScanResult } from "../types";
-import { SEVERITIES, SEVERITY_LABEL } from "../types";
 import { cn } from "@/lib/utils";
-import { SEV_FILL, gradeTone } from "../lib/severity";
+import { SEVERITIES, SEVERITY_LABEL, SEV_FILL, gradeTone, type Score } from "@/lib/severity";
 
 /**
  * Grade ring plus a stacked bar of findings by severity.
  * The bar is SVG so widths can be set as attributes: the app's CSP forbids inline style attributes.
  */
-export default function Grade({ score }: { score: ScanResult["score"] }) {
+export default function Grade({ score }: { score: Score }) {
   const present = SEVERITIES.filter((s) => score.counts[s] > 0);
   const total = present.reduce((n, s) => n + score.counts[s], 0) || 1;
   let x = 0;

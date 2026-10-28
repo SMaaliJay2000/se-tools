@@ -9,7 +9,7 @@ import Field from "../components/Field";
 import { ErrorNotice, WarningNotices } from "../components/Notices";
 import OutputRow from "../components/OutputRow";
 import SnippetViewer from "../components/SnippetViewer";
-import { useAction } from "../hooks/useAction";
+import { useAction } from "@/hooks/useAction";
 import { flipFirstBit } from "../lib/format";
 import type { AesGcmEncryptResponse } from "../types";
 

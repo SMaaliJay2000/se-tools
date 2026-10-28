@@ -9,10 +9,10 @@ import EncodingSelect from "../components/EncodingSelect";
 import Field from "../components/Field";
 import { ErrorNotice } from "../components/Notices";
 import OutputRow from "../components/OutputRow";
-import Segmented from "../components/Segmented";
+import Segmented from "@/components/Segmented";
 import SnippetViewer from "../components/SnippetViewer";
 import { useCatalog } from "../CatalogContext";
-import { useAction } from "../hooks/useAction";
+import { useAction } from "@/hooks/useAction";
 import type { Encoding } from "../types";
 import { shaLabel } from "./DigestPanel";
 

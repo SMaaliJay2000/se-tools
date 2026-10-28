@@ -1,4 +1,8 @@
-export type Severity = "critical" | "high" | "medium" | "low" | "info" | "pass";
+import type { Score, Severity } from "@/lib/severity";
+
+export type { Severity };
+export { SEVERITIES, SEVERITY_LABEL } from "@/lib/severity";
+
 export type Category = "transport" | "headers" | "cookies" | "cors" | "disclosure";
 
 export interface Fix {
@@ -54,19 +58,10 @@ export interface ScanResult {
   tls: Tls | null;
   tlsError: string | null;
   findings: Finding[];
-  score: { value: number; grade: string; counts: Record<Severity, number> };
+  score: Score;
   cors: { probes: CorsProbe[]; testOrigin: string | null };
 }
 
-export const SEVERITIES: Severity[] = ["critical", "high", "medium", "low", "info", "pass"];
-export const SEVERITY_LABEL: Record<Severity, string> = {
-  critical: "Critical",
-  high: "High",
-  medium: "Medium",
-  low: "Low",
-  info: "Info",
-  pass: "Passed",
-};
 export const CATEGORY_LABEL: Record<Category, string> = {
   transport: "HTTPS",
   headers: "Headers",
